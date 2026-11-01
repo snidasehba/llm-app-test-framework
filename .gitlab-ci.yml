@@ -1,0 +1,39 @@
+# Offline tests (retrieval metrics, checks, dataset validation) run on every push.
+# The live evaluation runs only when ANTHROPIC_API_KEY is set as a masked CI/CD variable,
+# and fails the pipeline if the bot's pass rate drops below 90% (e.g. after a prompt change).
+stages:
+  - test
+  - evaluate
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+cache:
+  key: maven
+  paths:
+    - .m2/repository
+
+offline-tests:
+  stage: test
+  image: maven:3.9-eclipse-temurin-17
+  script:
+    - mvn -B package
+  artifacts:
+    when: always
+    paths:
+      - target/llm-app-test-framework.jar
+    reports:
+      junit: target/surefire-reports/TEST-*.xml
+
+live-eval:
+  stage: evaluate
+  image: eclipse-temurin:17-jre
+  needs: [offline-tests]
+  rules:
+    - if: $ANTHROPIC_API_KEY
+  script:
+    - java -jar target/llm-app-test-framework.jar
+  artifacts:
+    when: always
+    paths:
+      - eval-report.md
