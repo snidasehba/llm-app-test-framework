@@ -21,7 +21,7 @@ public class LiveEvalTest {
 
     @Test(groups = "llm")
     public void liveBotMeetsTheQualityBar() throws Exception {
-        if (System.getenv("ANTHROPIC_API_KEY") == null) {
+        if (System.getenv().getOrDefault("ANTHROPIC_API_KEY", "").isBlank()) {
             throw new SkipException("ANTHROPIC_API_KEY not set");
         }
         String model = System.getenv().getOrDefault("CLAUDE_MODEL", "claude-opus-5-5");
